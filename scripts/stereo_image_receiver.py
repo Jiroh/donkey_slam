@@ -28,7 +28,7 @@ class stereo_image_preprocessor:
     def __init__(self, args=None):
         # self.image_pub = rospy.Publisher("stero_image_viewing", Image)
         self.bridge = CvBridge()
-        self.image_sub = rospy.Subscriber("stereo_image", Image, self.callback)
+        self.image_sub = rospy.Subscriber("/right/image_raw", Image, self.callback)
 
     def callback(self, data):
 
@@ -42,14 +42,13 @@ class stereo_image_preprocessor:
         cv2.imshow("Image Window", cv_image)
         cv2.waitKey(3)
 
-        try:
-            self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image))
-        except CvBridgeError as e:
-            print(e)
+        # try:
+            # self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image))
+        # except CvBridgeError as e:
+        #     print(e)
 
 
 def main(args):
-
     sip = stereo_image_preprocessor()
     rospy.init_node("stereo_processor", anonymous=True)
     try:

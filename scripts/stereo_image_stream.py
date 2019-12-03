@@ -29,7 +29,7 @@ def main():
     rospy.init_node("stereo_image_stream", anonymous=True)
     # rate = rospy.Rate(1) # 10 hz
 
-    cap = cv2.VideoCapture(-1)
+    cap = cv2.VideoCapture(2)
     bridge = CvBridge()
 
     while not rospy.is_shutdown():
