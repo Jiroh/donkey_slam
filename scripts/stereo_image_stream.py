@@ -11,7 +11,6 @@ import pdb
 
 
 def split_image(img):
-    
     img = Image.fromarray(img)
     w,h = img.size
     
@@ -24,12 +23,12 @@ def split_image(img):
 
 
 def main():
-    l_img_pub = rospy.Publisher("left/image_raw", sensor_msgs.msg.Image, queue_size=10)
-    r_img_pub = rospy.Publisher("right/image_raw", sensor_msgs.msg.Image, queue_size=10)
+    l_img_pub = rospy.Publisher("/my_stereo/left/image_raw", sensor_msgs.msg.Image, queue_size=10)
+    r_img_pub = rospy.Publisher("/my_stereo/right/image_raw", sensor_msgs.msg.Image, queue_size=10)
     rospy.init_node("stereo_image_stream", anonymous=True)
     # rate = rospy.Rate(1) # 10 hz
 
-    cap = cv2.VideoCapture(2)
+    cap = cv2.VideoCapture(3)
     bridge = CvBridge()
 
     while not rospy.is_shutdown():
@@ -41,9 +40,8 @@ def main():
         l_img_message = bridge.cv2_to_imgmsg(l_img)
         r_img_message = bridge.cv2_to_imgmsg(r_img)
 
-        l_img_message.header.frame_id = "left/image_raw"
-        r_img_message.header.frame_id = "right_image_raw"
-
+        l_img_message.header.frame_id = "/camera_link"
+        r_img_message.header.frame_id = "/camera_link"
         l_img_pub.publish(l_img_message)
         r_img_pub.publish(r_img_message)
         # rate.sleep()
