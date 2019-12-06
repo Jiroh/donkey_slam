@@ -26,14 +26,10 @@ def split_image(img):
 class stereo_image_preprocessor:
 
     def __init__(self, args=None):
-        # self.image_pub = rospy.Publisher("stero_image_viewing", Image)
         self.bridge = CvBridge()
-        self.image_sub = rospy.Subscriber("/right/image_raw", Image, self.callback)
+        self.image_sub = rospy.Subscriber("my_stereo/right/image_raw", Image, self.callback)
 
     def callback(self, data):
-
-        # pdb.set_trace()
-
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data)
         except CvBridgeError as e:
@@ -41,11 +37,6 @@ class stereo_image_preprocessor:
     
         cv2.imshow("Image Window", cv_image)
         cv2.waitKey(3)
-
-        # try:
-            # self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image))
-        # except CvBridgeError as e:
-        #     print(e)
 
 
 def main(args):
@@ -58,22 +49,5 @@ def main(args):
     cv2.destroyAllWindows()
 
 
-
-
-# def talker():
-#     pub = rospy.Publisher('chatter', String, queue_size=10)
-#     rospy.init_node('talker', anonymous=True)
-#     rate = rospy.Rate(10) # 10hz
-#     while not rospy.is_shutdown():
-#         hello_str = "hello world %s" % rospy.get_time()
-#         rospy.loginfo(hello_str)
-#         pub.publish(hello_str)
-#         rate.sleep()
-
 if __name__ == '__main__':
     main(sys.argv)
-
-    # try:
-    #     talker()
-    # except rospy.ROSInterruptException:
-    #     pass

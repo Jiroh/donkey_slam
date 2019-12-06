@@ -8,6 +8,7 @@ import sensor_msgs
 from cv_bridge import CvBridge
 from PIL import Image
 import pdb
+import camera_info_manager
 
 
 def split_image(img):
@@ -23,28 +24,59 @@ def split_image(img):
 
 
 def main():
-    l_img_pub = rospy.Publisher("/my_stereo/left/image_raw", sensor_msgs.msg.Image, queue_size=10)
-    r_img_pub = rospy.Publisher("/my_stereo/right/image_raw", sensor_msgs.msg.Image, queue_size=10)
-    rospy.init_node("stereo_image_stream", anonymous=True)
-    # rate = rospy.Rate(1) # 10 hz
+    
+    # left camera
+    l_img_pub = rospy.Publisher("/stereo_cam/left/image_raw", sensor_msgs.msg.Image, queue_size=10)
+    l_info_pub = rospy.Publisher("/stereo_cam/left/camera_info", sensor_msgs.msg.CameraInfo, queue_size=10)
 
-    cap = cv2.VideoCapture(3)
+    # right camera
+    r_img_pub = rospy.Publisher("/stereo_cam/right/image_raw", sensor_msgs.msg.Image, queue_size=10)
+    r_info_pub = rospy.Publisher("/stereo_cam/right/camera_info", sensor_msgs.msg.CameraInfo, queue_size=10)
+
+    # initialize node
+    rospy.init_node("stereo_image_stream", anonymous=True)
+
+    cap = cv2.VideoCapture(2)
     bridge = CvBridge()
 
     while not rospy.is_shutdown():
+        # preprocess stereo images
         _, raw_image = cap.read()
         l_img, r_img = split_image(raw_image)
-
         rospy.loginfo("Read Cv Image: " + str(raw_image.shape))
-
+        
+        # create ros image messages
         l_img_message = bridge.cv2_to_imgmsg(l_img)
         r_img_message = bridge.cv2_to_imgmsg(r_img)
+        
+        # create ros camera info messages
+        l_info_manager = camera_info_manager.CameraInfoManager(
+            cname="/stereo_cam/left",
+            url="file:///left__stereo_camera.yml",
+            namespace="/stereo_cam/left")
+        l_info_manager.loadCameraInfo()
+        l_info_message = l_info_manager.getCameraInfo()
 
-        l_img_message.header.frame_id = "/camera_link"
-        r_img_message.header.frame_id = "/camera_link"
+        r_info_manager = camera_info_manager.CameraInfoManager(
+            cname="/stereo_cam/right",
+            url="file:///right_stereo_camera.yml",
+            namespace="/stereo_cam/right")
+        r_info_manager.loadCameraInfo()
+        r_info_message = r_info_manager.getCameraInfo()
+
+        # set headers
+        header_frame_id = "/camera_link"
+        l_img_message.header.frame_id = header_frame_id
+        r_img_message.header.frame_id = header_frame_id
+        l_info_message.header.frame_id = header_frame_id
+        r_info_message.header.frame_id = header_frame_id
+
+    
+        # publish messages
         l_img_pub.publish(l_img_message)
         r_img_pub.publish(r_img_message)
-        # rate.sleep()
+        l_info_pub.publish(l_info_message)
+        r_info_pub.publish(r_info_message)
         
     cap.release()
     cv2.destroyAllWindows()
