@@ -10,6 +10,10 @@ from PIL import Image
 import pdb
 import camera_info_manager
 
+### STEREO CALIBRATION
+# $ rosrun camera_calibration cameracalibrator.py --approximate 0.1 --size 8x6 --square 0.108 right:=/stereo_cam/right/image_raw left:=/stereo_cam/left/image_raw right_camera:=/stereo_cam/right left_camera:=/stereo_cam/left
+# 
+
 
 def split_image(img):
     img = Image.fromarray(img)
@@ -24,19 +28,35 @@ def split_image(img):
 
 
 def main():
+
+    # create ros camera info messages
+    l_info_manager = camera_info_manager.CameraInfoManager(
+        cname="/stereo_cam/left",
+        url="file:///left__stereo_camera.yml",
+        namespace="/stereo_cam/left")
+    l_info_manager.loadCameraInfo()
+    l_info_message = l_info_manager.getCameraInfo()
+
+    r_info_manager = camera_info_manager.CameraInfoManager(
+        cname="/stereo_cam/right",
+        url="file:///right_stereo_camera.yml",
+        namespace="/stereo_cam/right")
+    r_info_manager.loadCameraInfo()
+    r_info_message = r_info_manager.getCameraInfo()
+
     
-    # left camera
+    # left camera publishers
     l_img_pub = rospy.Publisher("/stereo_cam/left/image_raw", sensor_msgs.msg.Image, queue_size=10)
     l_info_pub = rospy.Publisher("/stereo_cam/left/camera_info", sensor_msgs.msg.CameraInfo, queue_size=10)
 
-    # right camera
+    # right camera publishers
     r_img_pub = rospy.Publisher("/stereo_cam/right/image_raw", sensor_msgs.msg.Image, queue_size=10)
     r_info_pub = rospy.Publisher("/stereo_cam/right/camera_info", sensor_msgs.msg.CameraInfo, queue_size=10)
 
     # initialize node
     rospy.init_node("stereo_image_stream", anonymous=True)
 
-    cap = cv2.VideoCapture(2)
+    cap = cv2.VideoCapture(-1)
     bridge = CvBridge()
 
     while not rospy.is_shutdown():
@@ -46,23 +66,8 @@ def main():
         rospy.loginfo("Read Cv Image: " + str(raw_image.shape))
         
         # create ros image messages
-        l_img_message = bridge.cv2_to_imgmsg(l_img)
-        r_img_message = bridge.cv2_to_imgmsg(r_img)
-        
-        # create ros camera info messages
-        l_info_manager = camera_info_manager.CameraInfoManager(
-            cname="/stereo_cam/left",
-            url="file:///left__stereo_camera.yml",
-            namespace="/stereo_cam/left")
-        l_info_manager.loadCameraInfo()
-        l_info_message = l_info_manager.getCameraInfo()
-
-        r_info_manager = camera_info_manager.CameraInfoManager(
-            cname="/stereo_cam/right",
-            url="file:///right_stereo_camera.yml",
-            namespace="/stereo_cam/right")
-        r_info_manager.loadCameraInfo()
-        r_info_message = r_info_manager.getCameraInfo()
+        l_img_message = bridge.cv2_to_imgmsg(l_img, encoding="bgr8")
+        r_img_message = bridge.cv2_to_imgmsg(r_img, encoding="bgr8")
 
         # set headers
         header_frame_id = "/camera_link"
