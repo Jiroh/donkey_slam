@@ -14,6 +14,14 @@ import camera_info_manager
 # $ rosrun camera_calibration cameracalibrator.py --approximate 0.1 --size 8x6 --square 0.108 right:=/stereo_cam/right/image_raw left:=/stereo_cam/left/image_raw right_camera:=/stereo_cam/right left_camera:=/stereo_cam/left
 # 
 
+### Run static_transform_publisher
+# $ rosrun tf static_transform_publisher 0 0 0 -1.5707963267948966 0 -1.5707963267948966 camera_link stereo_cam 100
+
+### RUN RTAB_MAP
+# $ roslaunch rtabmap_ros donkey_slam.launch stereo_namespace:="/stereo_cam" rtabmap_args:="--delete_db_on_start"
+
+
+
 
 def split_image(img):
     img = Image.fromarray(img)
@@ -32,14 +40,14 @@ def main():
     # create ros camera info messages
     l_info_manager = camera_info_manager.CameraInfoManager(
         cname="/stereo_cam/left",
-        url="file:///left__stereo_camera.yml",
+        url="file:///home/waydegg/catkin_ws/src/donkey_slam/calibration_data/left.yaml",
         namespace="/stereo_cam/left")
     l_info_manager.loadCameraInfo()
     l_info_message = l_info_manager.getCameraInfo()
 
     r_info_manager = camera_info_manager.CameraInfoManager(
         cname="/stereo_cam/right",
-        url="file:///right_stereo_camera.yml",
+        url="file:///home/waydegg/catkin_ws/src/donkey_slam/calibration_data/right.yaml",
         namespace="/stereo_cam/right")
     r_info_manager.loadCameraInfo()
     r_info_message = r_info_manager.getCameraInfo()
@@ -56,7 +64,7 @@ def main():
     # initialize node
     rospy.init_node("stereo_image_stream", anonymous=True)
 
-    cap = cv2.VideoCapture(2)
+    cap = cv2.VideoCapture(-1)
     bridge = CvBridge()
 
     while not rospy.is_shutdown():
@@ -70,7 +78,7 @@ def main():
         r_img_message = bridge.cv2_to_imgmsg(r_img, encoding="bgr8")
 
         # set headers
-        header_frame_id = "/camera_link"
+        header_frame_id = "/base_link" # base_link
         l_img_message.header.frame_id = header_frame_id
         r_img_message.header.frame_id = header_frame_id
         l_info_message.header.frame_id = header_frame_id
