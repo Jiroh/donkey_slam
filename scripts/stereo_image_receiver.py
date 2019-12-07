@@ -27,7 +27,7 @@ class stereo_image_preprocessor:
 
     def __init__(self, args=None):
         self.bridge = CvBridge()
-        self.image_sub = rospy.Subscriber("my_stereo/right/image_raw", Image, self.callback)
+        self.image_sub = rospy.Subscriber("stereo_cam/left/image_raw", Image, self.callback)
 
     def callback(self, data):
         try:

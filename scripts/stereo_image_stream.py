@@ -56,7 +56,7 @@ def main():
     # initialize node
     rospy.init_node("stereo_image_stream", anonymous=True)
 
-    cap = cv2.VideoCapture(-1)
+    cap = cv2.VideoCapture(2)
     bridge = CvBridge()
 
     while not rospy.is_shutdown():
