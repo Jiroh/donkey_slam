@@ -11,8 +11,10 @@ import pdb
 import camera_info_manager
 
 ### STEREO CALIBRATION
+## Monocular calibration
 # $ rosrun camera_calibration cameracalibrator.py --approximate 0.1 --size 8x6 --square 0.108 right:=/stereo_cam/right/image_raw left:=/stereo_cam/left/image_raw right_camera:=/stereo_cam/right left_camera:=/stereo_cam/left
-# 
+## Stereo calibration (generates topics rtabmap needs)
+# $ ROS_NAMESPACE=stereo_cam rosrun stereo_image_proc stereo_image_proc
 
 ### Run static_transform_publisher
 # $ rosrun tf static_transform_publisher 0 0 0 -1.5707963267948966 0 -1.5707963267948966 camera_link stereo_cam 100
