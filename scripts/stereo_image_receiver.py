@@ -9,21 +9,11 @@ from sensor_msgs.msg import Image, PointCloud2
 from std_msgs.msg import String
 from cv_bridge import CvBridge, CvBridgeError
 import pdb
-
 import sensor_msgs.point_cloud2 as pc2
-
-def split_image(img):
-    
-    img = Image.fromarray(img)
-    w,h = img.size
-    
-    left_area = (0,0,w//2,h)
-    right_area = (w//2,0,w,h)
-    left_image = img.crop(left_area)
-    right_image = img.crop(right_area)
-    
-    return left_image, right_image
-
+from config import *
+from util import *
+from datetime import datetime
+import json
 
 class stereo_image_preprocessor:
 
@@ -45,7 +35,7 @@ class stereo_image_preprocessor:
         cv2.imshow("Image Window", cv_image)
         cv2.waitKey(3)
 
-    def pc2_callback(self, data):\
+    def pc2_callback(self, data):
         cloud_points = []
         point_generator = pc2.read_points(data, skip_nans=True)
         while(True):
@@ -53,8 +43,15 @@ class stereo_image_preprocessor:
                 cloud_points.append(point_generator.next())
             except:
                 break
-        
         rospy.loginfo("Found %s points in cloud" % len(cloud_points))
+
+        # save points to file
+        current_time = datetime.now().strftime("%y%m%d%H%M%S%f")
+        point_filename = "%s_point_data.json" % current_time
+
+        json_cloud_points = json.dumps(cloud_points)
+        with open("%s/%s" % (POINT_DATA_OUTPUT, point_filename), "w") as outfile:
+            json.dump(json_cloud_points, outfile)
 
 
 def main(args):

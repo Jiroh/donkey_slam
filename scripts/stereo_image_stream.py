@@ -4,64 +4,48 @@ import sys
 import numpy as np
 import cv2
 import rospy
-import sensor_msgs
+from sensor_msgs.msg import Image as ImageMsg
+from sensor_msgs.msg import CameraInfo
 from cv_bridge import CvBridge
 from PIL import Image
 import pdb
 import camera_info_manager
+from config import *
+from util import *
 
 ### STEREO CALIBRATION
 ## Monocular calibration
 # $ rosrun camera_calibration cameracalibrator.py --approximate 0.1 --size 8x6 --square 0.108 right:=/stereo_cam/right/image_raw left:=/stereo_cam/left/image_raw right_camera:=/stereo_cam/right left_camera:=/stereo_cam/left
-## Stereo calibration (generates topics rtabmap needs)
+## Stereo calibration (generates topics rtabmap needs, needs to be running constantly)
 # $ ROS_NAMESPACE=stereo_cam rosrun stereo_image_proc stereo_image_proc
-
-### Run static_transform_publisher
-# $ rosrun tf static_transform_publisher 0 0 0 -1.5707963267948966 0 -1.5707963267948966 camera_link stereo_cam 100
 
 ### RUN RTAB_MAP
 # $ roslaunch rtabmap_ros donkey_slam.launch stereo_namespace:="/stereo_cam" rtabmap_args:="--delete_db_on_start"
 
-
-
-
-def split_image(img):
-    img = Image.fromarray(img)
-    w,h = img.size
-    
-    left_area = (0,0,w//2,h)
-    right_area = (w//2,0,w,h)
-    left_image = img.crop(left_area)
-    right_image = img.crop(right_area)
-    
-    return np.array(left_image), np.array(right_image)
-
-
 def main():
-
     # create ros camera info messages
     l_info_manager = camera_info_manager.CameraInfoManager(
-        cname="/stereo_cam/left",
-        url="file:///home/waydegg/catkin_ws/src/donkey_slam/calibration_data/left.yaml",
-        namespace="/stereo_cam/left")
+        cname=LEFT_CAM,
+        url="file://%s/left.yaml" % CALIBRATION_DATA,
+        namespace=LEFT_CAM)
     l_info_manager.loadCameraInfo()
     l_info_message = l_info_manager.getCameraInfo()
 
     r_info_manager = camera_info_manager.CameraInfoManager(
-        cname="/stereo_cam/right",
-        url="file:///home/waydegg/catkin_ws/src/donkey_slam/calibration_data/right.yaml",
-        namespace="/stereo_cam/right")
+        cname=RIGHT_CAM,
+        url="file://%s/right.yaml" % CALIBRATION_DATA,
+        namespace=RIGHT_CAM)
     r_info_manager.loadCameraInfo()
     r_info_message = r_info_manager.getCameraInfo()
 
     
     # left camera publishers
-    l_img_pub = rospy.Publisher("/stereo_cam/left/image_raw", sensor_msgs.msg.Image, queue_size=10)
-    l_info_pub = rospy.Publisher("/stereo_cam/left/camera_info", sensor_msgs.msg.CameraInfo, queue_size=10)
+    l_img_pub = rospy.Publisher("%s/image_raw" % LEFT_CAM, ImageMsg, queue_size=QUEUE_SIZE)
+    l_info_pub = rospy.Publisher("%s/camera_info" % LEFT_CAM, CameraInfo, queue_size=QUEUE_SIZE)
 
     # right camera publishers
-    r_img_pub = rospy.Publisher("/stereo_cam/right/image_raw", sensor_msgs.msg.Image, queue_size=10)
-    r_info_pub = rospy.Publisher("/stereo_cam/right/camera_info", sensor_msgs.msg.CameraInfo, queue_size=10)
+    r_img_pub = rospy.Publisher("%s/image_raw" % RIGHT_CAM, ImageMsg, queue_size=QUEUE_SIZE)
+    r_info_pub = rospy.Publisher("%s/camera_info" % RIGHT_CAM, CameraInfo, queue_size=QUEUE_SIZE)
 
     # initialize node
     rospy.init_node("stereo_image_stream", anonymous=True)
@@ -80,12 +64,10 @@ def main():
         r_img_message = bridge.cv2_to_imgmsg(r_img, encoding="bgr8")
 
         # set headers
-        header_frame_id = "/base_link" # base_link
-        l_img_message.header.frame_id = header_frame_id
-        r_img_message.header.frame_id = header_frame_id
-        l_info_message.header.frame_id = header_frame_id
-        r_info_message.header.frame_id = header_frame_id
-
+        l_img_message.header.frame_id = HEADER_ID
+        r_img_message.header.frame_id = HEADER_ID
+        l_info_message.header.frame_id = HEADER_ID
+        r_info_message.header.frame_id = HEADER_ID
     
         # publish messages
         l_img_pub.publish(l_img_message)
