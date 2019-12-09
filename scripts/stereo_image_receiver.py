@@ -5,7 +5,8 @@ import rospy
 from std_msgs.msg import String
 import cv2
 import PIL
-from sensor_msgs.msg import Image, PointCloud2
+from sensor_msgs.msg import Image as ImageMsg
+from sensor_msgs.msg import PointCloud2
 from std_msgs.msg import String
 from cv_bridge import CvBridge, CvBridgeError
 import pdb
@@ -14,12 +15,13 @@ from config import *
 from util import *
 from datetime import datetime
 import json
+import time
 
 class stereo_image_preprocessor:
 
     def __init__(self, args=None):
-        # self.bridge = CvBridge()
-        # self.image_sub = rospy.Subscriber("stereo_cam/left/image_raw", Image, self.monocular_view_callback)
+        self.bridge = CvBridge()
+        self.image_sub = rospy.Subscriber("stereo_cam/left/image_raw", ImageMsg, self.monocular_view_callback)
         self.point_sub = rospy.Subscriber(
             name="/rtabmap/odom_local_map",
             data_class=PointCloud2, 
@@ -32,8 +34,16 @@ class stereo_image_preprocessor:
         except CvBridgeError as e:
             print(e)
     
-        cv2.imshow("Image Window", cv_image)
-        cv2.waitKey(3)
+        # save current image to file
+        current_time = datetime.now().strftime("%y%m%d%H%M%S%f")
+        image_filename = "%s/%s_mono_image.jpg" % (MONO_IMAGE_OUTPUT, current_time)
+        cv2.imwrite(image_filename, cv_image)
+        rospy.loginfo("Saved image %s" % image_filename)
+        time.sleep(0.1) # 10 hz
+
+        ### View the image feed in a window
+        # cv2.imshow("Image Window", cv_image)
+        # cv2.waitKey(3)
 
     def pc2_callback(self, data):
         cloud_points = []

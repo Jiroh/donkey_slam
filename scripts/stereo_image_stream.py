@@ -38,7 +38,7 @@ def main():
     r_info_manager.loadCameraInfo()
     r_info_message = r_info_manager.getCameraInfo()
 
-    
+
     # left camera publishers
     l_img_pub = rospy.Publisher("%s/image_raw" % LEFT_CAM, ImageMsg, queue_size=QUEUE_SIZE)
     l_info_pub = rospy.Publisher("%s/camera_info" % LEFT_CAM, CameraInfo, queue_size=QUEUE_SIZE)
