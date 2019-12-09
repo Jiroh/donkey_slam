@@ -22,6 +22,11 @@ from util import *
 ### RUN RTAB_MAP
 # $ roslaunch rtabmap_ros donkey_slam.launch stereo_namespace:="/stereo_cam" rtabmap_args:="--delete_db_on_start"
 
+### DONKEY TRAINING
+# $ python train.py --tub /home/jetson/projects/d3/stereo_data/tub_9_19-12-08 --model=models/model_name.h5
+
+
+
 def main():
     # create ros camera info messages
     l_info_manager = camera_info_manager.CameraInfoManager(

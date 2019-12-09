@@ -55,6 +55,12 @@ class stereo_image_preprocessor:
                 break
         rospy.loginfo("Found %s points in cloud" % len(cloud_points))
 
+        # format points to uniform length (300 max points)
+        if(len(cloud_points) > 300):
+            cloud_points = cloud_points[0:300]
+        while len(cloud_points) < 300:
+            cloud_points.append((0.0,0.0,0.0,0.0))
+
         # save points to file
         current_time = datetime.now().strftime("%y%m%d%H%M%S%f")
         point_filename = "%s_point_data.json" % current_time
